@@ -91,7 +91,7 @@ module.exports = function(opts) {
   var dbinst  = null
   var collmap = {}
   var specifications = null
-
+  var oldstyle = opts.oldstyle;
 
   function error(args,err,cb) {
     if( err ) {
@@ -172,7 +172,7 @@ module.exports = function(opts) {
             seneca.log.error('init','db auth failed for '+conf.username,dbopts)
             return cb(err);
           }
-          
+
           seneca.log.debug('init','db open and authed for '+conf.username,dbopts)
           cb(null)
         })
@@ -239,6 +239,7 @@ module.exports = function(opts) {
           if( update ) {
             var q = {_id:makeid(ent.id)}
             delete entp.id
+            delete entp._id
 
             coll.update(q,{$set: entp}, {upsert:true},function(err,update){
               if( !error(args,err,cb) ) {
@@ -251,6 +252,7 @@ module.exports = function(opts) {
             coll.insertOne(entp,function(err,inserts){
               if( !error(args,err,cb) ) {
                 ent.id = idstr( inserts.ops[0]._id )
+                if (oldstyle) { ent._id = inserts.ops[0]._id; }
 
                 seneca.log.debug('save/insert',ent,desc)
                 cb(null,ent)
@@ -276,7 +278,7 @@ module.exports = function(opts) {
               var fent = null;
               if( entp ) {
                 entp.id = idstr( entp._id )
-                delete entp._id;
+                if (!oldstyle) { delete entp._id; }
 
                 fent = qent.make$(entp);
               }
@@ -309,7 +311,7 @@ module.exports = function(opts) {
                     var fent = null;
                     if( entp ) {
                       entp.id = idstr( entp._id )
-                      delete entp._id;
+                      if (!oldstyle) { delete entp._id; }
 
                       fent = qent.make$(entp);
                     }
@@ -399,15 +401,3 @@ module.exports = function(opts) {
 
   return {name:store.name,tag:meta.tag}
 }
-
-
-
-
-
-
-
-
-
-
-
-
